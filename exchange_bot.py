@@ -24,7 +24,6 @@ async def get_currency(message: types.Message):
         last_rates = db.get_latest_rates()[0]
         last_timestamp = last_rates[2]
         if float(time.time()) - float(last_timestamp) > 600:
-            print("new")
             exchange_info = requests.get('http://api.exchangeratesapi.io/latest?access_key=' + API_EXCHANGE_KEY)
             rates = json.loads(exchange_info.text)['rates'].items()
             output = '\n'.join(['{}: {}'.format(i[0], i[1]) for i in rates])
@@ -46,7 +45,6 @@ async def get_currency(message: types.Message):
 async def exchange_usd_to_cad(message: types.Message):
     mess_text = message.text.split(" ")
     params = {'from': mess_text[2], 'to': mess_text[4], 'amount': mess_text[1], 'api_key': API_FXM_KEY}
-    print(params)
     result = requests.get('https://fxmarketapi.com/apiconvert?', params)
     output = json.loads(result.text)['total']
     await message.answer("${}".format(round(output, 2)))
@@ -56,14 +54,11 @@ async def exchange_usd_to_cad(message: types.Message):
 async def history(message: types.Message):
     mess_text = message.text.split(' ')
     end_date = datetime.date.today()
-    print(mess_text[3])
     start_date = datetime.date.today() - datetime.timedelta(days=int(mess_text[3]))
     params = {'currency': mess_text[1][0:3]+mess_text[1][4:7], 'start_date': start_date.strftime("%Y-%m-%d"),
               'end_date': end_date.strftime("%Y-%m-%d"), 'interval': 'daily', 'api_key': API_FXM_KEY}
     result = requests.get('https://fxmarketapi.com/apipandas?', params)
-    print(params)
     output = pandas.read_json(result.text)
-    print(output)
     output.plot(kind='line').get_figure().savefig('history.png')
     await bot.send_photo(message.from_user.id, open(r".\history.png", 'rb'))
 
