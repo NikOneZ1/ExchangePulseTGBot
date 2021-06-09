@@ -20,18 +20,26 @@ db = database.DB(r'.\sqlite.db')
 
 @dp.message_handler(commands=['list'])
 async def get_currency(message: types.Message):
-    last_rates = db.get_latest_rates()[0]
-    last_timestamp = last_rates[2]
-    if float(time.time()) - float(last_timestamp) > 600:
-        print("new")
+    try:
+        last_rates = db.get_latest_rates()[0]
+        last_timestamp = last_rates[2]
+        if float(time.time()) - float(last_timestamp) > 600:
+            print("new")
+            exchange_info = requests.get('http://api.exchangeratesapi.io/latest?access_key=' + API_EXCHANGE_KEY)
+            rates = json.loads(exchange_info.text)['rates'].items()
+            output = '\n'.join(['{}: {}'.format(i[0], i[1]) for i in rates])
+            data = [output, time.time()]
+            db.add_rates(data)
+            await message.answer(output)
+        else:
+            await message.answer(last_rates[1])
+    except:
         exchange_info = requests.get('http://api.exchangeratesapi.io/latest?access_key=' + API_EXCHANGE_KEY)
         rates = json.loads(exchange_info.text)['rates'].items()
         output = '\n'.join(['{}: {}'.format(i[0], i[1]) for i in rates])
         data = [output, time.time()]
         db.add_rates(data)
         await message.answer(output)
-    else:
-        await message.answer(last_rates[1])
 
 
 @dp.message_handler(commands=['exchange'])
@@ -57,7 +65,7 @@ async def history(message: types.Message):
     output = pandas.read_json(result.text)
     print(output)
     output.plot(kind='line').get_figure().savefig('history.png')
-    await message.answer(output)
+    await bot.send_photo(message.from_user.id, open(r".\history.png", 'rb'))
 
 if __name__ == "__main__":
     executor.start_polling(dp, skip_updates=True)

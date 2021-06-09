@@ -11,7 +11,7 @@ __pycache__/
 build/
 config.py
 .png
-.db
+sqlite.db
 develop-eggs/
 dist/
 downloads/
