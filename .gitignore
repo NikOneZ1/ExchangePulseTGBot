@@ -10,7 +10,7 @@ __pycache__/
 .Python
 build/
 config.py
-.png
+*.png
 sqlite.db
 develop-eggs/
 dist/
